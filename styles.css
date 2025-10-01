@@ -431,6 +431,22 @@ body {
     }
 }
 
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
+
+/* Smooth transitions for quote changes */
+#dailyQuote {
+    transition: opacity 0.3s ease-in-out;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .main-wrapper {
