@@ -8,9 +8,18 @@ class PhilosophicalDebateApp {
     }
 
     init() {
+        this.displayCurrentDate();
         this.displayDailyQuote();
         this.setupChatFunctionality();
         this.loadStoredMessages();
+        this.setupCharacterCounter();
+    }
+
+    displayCurrentDate() {
+        const dateDisplay = document.getElementById('dateDisplay');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const today = new Date().toLocaleDateString('en-US', options);
+        dateDisplay.textContent = today;
     }
 
     // Generate a consistent daily quote based on the current date
@@ -24,10 +33,10 @@ class PhilosophicalDebateApp {
 
         // Display the quote
         document.getElementById('dailyQuote').textContent = todaysQuote.quote;
-        document.getElementById('quoteAuthor').textContent = `— ${todaysQuote.author}`;
+        document.getElementById('quoteAuthor').textContent = todaysQuote.author;
         document.getElementById('quoteContext').innerHTML = `
-            <strong>Context:</strong> ${todaysQuote.context}
-            <br><strong>Topic:</strong> ${todaysQuote.topic}
+            <strong>Background:</strong> ${todaysQuote.context}
+            <br><br><strong>Topic:</strong> ${todaysQuote.topic}
         `;
     }
 
@@ -97,22 +106,50 @@ class PhilosophicalDebateApp {
         const messageElement = document.createElement('div');
         messageElement.className = 'message';
         messageElement.innerHTML = `
-            <div class="message-author">${message.author}</div>
-            <div class="message-content">${this.escapeHtml(message.content)}</div>
-            <div class="message-time">${this.formatTime(message.timestamp)}</div>
+            <div class="avatar">${this.getRandomEmoji()}</div>
+            <div class="message-bubble">
+                <div class="message-author">${message.author}</div>
+                <div class="message-content">${this.escapeHtml(message.content)}</div>
+                <div class="message-time">${this.formatTime(message.timestamp)}</div>
+            </div>
         `;
 
         chatMessages.appendChild(messageElement);
     }
 
+    // Get random emoji for avatar
+    getRandomEmoji() {
+        const emojis = ['🤔', '🧠', '💭', '🤓', '🎭', '📚', '✨', '🔍', '💡', '🎨', '🌟', '🦉'];
+        return emojis[Math.floor(Math.random() * emojis.length)];
+    }
+
     // Generate a random name for demonstration (in real app, users would log in)
     getRandomName() {
         const names = [
-            'Thoughtful Thinker', 'Wise Wanderer', 'Curious Mind', 'Deep Philosopher',
-            'Questioning Soul', 'Reflective Reader', 'Contemplative Being', 'Seeking Spirit',
-            'Analytical Mind', 'Pondering Person', 'Rational Reasoner', 'Mindful Meditator'
+            'wondering_soul', 'deep_thinker42', 'question_everything', 'socrates_fan',
+            'mind_wanderer', 'curious_cat', 'philosophy_nerd', 'seeker_of_truth',
+            'random_thoughts', 'brain_storms', 'wise_owl', 'thinking_cap'
         ];
         return names[Math.floor(Math.random() * names.length)];
+    }
+
+    // Setup character counter
+    setupCharacterCounter() {
+        const chatInput = document.getElementById('chatInput');
+        const charCount = document.getElementById('charCount');
+        
+        chatInput.addEventListener('input', () => {
+            const currentLength = chatInput.value.length;
+            charCount.textContent = `${currentLength}/500`;
+            
+            if (currentLength > 450) {
+                charCount.style.color = '#f56565';
+            } else if (currentLength > 400) {
+                charCount.style.color = '#ed8936';
+            } else {
+                charCount.style.color = '#a0aec0';
+            }
+        });
     }
 
     // Format timestamp
@@ -187,14 +224,14 @@ class PhilosophicalDebateApp {
             const demoMessages = [
                 {
                     id: 1,
-                    author: 'Thoughtful Thinker',
-                    content: 'This quote really makes me wonder about the nature of self-awareness. Can we ever truly know ourselves completely?',
-                    timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+                    author: 'deep_thinker42',
+                    content: 'wow this really hits different... makes me question everything I thought I knew about living authentically',
+                    timestamp: new Date(Date.now() - 420000) // 7 minutes ago
                 },
                 {
                     id: 2,
-                    author: 'Questioning Soul',
-                    content: 'I think the key is in the word "examined" - it suggests an ongoing process rather than a final state of knowledge.',
+                    author: 'question_everything',
+                    content: 'but how do we even know what counts as "examining" our lives? are we just examining our thoughts about our lives?? 🤯',
                     timestamp: new Date(Date.now() - 180000) // 3 minutes ago
                 }
             ];

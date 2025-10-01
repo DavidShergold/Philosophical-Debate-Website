@@ -7,46 +7,65 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Daily Philosophical Debate</h1>
-            <p class="subtitle">Explore profound thoughts and engage in meaningful discussions</p>
-        </header>
+    <div class="main-wrapper">
+        <div class="header-blob">
+            <div class="floating-thought">💭</div>
+            <h1>The Thinking Corner</h1>
+            <p class="header-text">Where ideas collide and minds wander</p>
+            <div class="date-badge" id="dateDisplay"></div>
+        </div>
 
-        <main>
-            <section class="quote-section">
-                <div class="quote-container">
-                    <div class="quote-text" id="dailyQuote">
-                        Loading today's philosophical thought...
-                    </div>
-                    <div class="quote-author" id="quoteAuthor">
-                        
-                    </div>
-                    <div class="quote-context" id="quoteContext">
-                        
+        <div class="content-area">
+            <div class="quote-card">
+                <div class="card-corner-fold"></div>
+                <div class="quote-mark-big">"</div>
+                <div class="daily-quote" id="dailyQuote">
+                    Loading today's philosophical thought...
+                </div>
+                <div class="attribution">
+                    <span class="dash">—</span>
+                    <span class="author-name" id="quoteAuthor"></span>
+                </div>
+                <div class="context-box" id="quoteContext"></div>
+                <div class="thought-bubble"></div>
+            </div>
+
+            <div class="discussion-area">
+                <div class="chat-header">
+                    <span class="chat-icon">🗣️</span>
+                    <h2>What do you think?</h2>
+                    <div class="online-indicator">
+                        <div class="pulse-dot"></div>
+                        <span>Discussion live</span>
                     </div>
                 </div>
-            </section>
-
-            <section class="discussion-section">
-                <h2>Join the Discussion</h2>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="welcome-message">
-                            Welcome to today's philosophical discussion! Share your thoughts on the idea above.
+                
+                <div class="conversation-flow" id="chatMessages">
+                    <div class="intro-message">
+                        <div class="avatar">🤔</div>
+                        <div class="message-content">
+                            <p>Jump into today's philosophical rabbit hole! What's your take on this idea?</p>
                         </div>
                     </div>
-                    <div class="chat-input-container">
-                        <input type="text" id="chatInput" placeholder="Share your thoughts..." maxlength="500">
-                        <button id="sendButton">Send</button>
-                    </div>
                 </div>
-            </section>
-        </main>
+                
+                <div class="input-section">
+                    <div class="input-wrapper">
+                        <input type="text" id="chatInput" placeholder="Type your thoughts here..." maxlength="500">
+                        <button id="sendButton" class="send-btn">
+                            <span>→</span>
+                        </button>
+                    </div>
+                    <div class="char-count" id="charCount">0/500</div>
+                </div>
+            </div>
+        </div>
 
-        <footer>
-            <p>&copy; 2025 Shergold Industries | Encouraging thoughtful discourse</p>
-        </footer>
+        <div class="footer-area">
+            <div class="footer-doodle">∿∿∿</div>
+            <p>Made with curiosity by Shergold Industries</p>
+            <div class="year-badge">2025</div>
+        </div>
     </div>
 
     <script src="philosophical-quotes.js"></script>
