@@ -145,6 +145,70 @@
         </div>
     </div>
 
+    <!-- Admin Dashboard -->
+    <div class="admin-overlay" id="adminDashboard" style="display: none;">
+        <div class="admin-panel">
+            <div class="admin-header">
+                <h2>🛡️ Admin Dashboard</h2>
+                <button class="close-btn" id="closeAdmin">×</button>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="users">Users</button>
+                <button class="admin-tab" data-tab="messages">Messages</button>
+                <button class="admin-tab" data-tab="settings">Settings</button>
+                <button class="admin-tab" data-tab="stats">Stats</button>
+            </div>
+
+            <div class="admin-content">
+                <!-- Users Tab -->
+                <div class="tab-content active" id="admin-users">
+                    <h3>User Management</h3>
+                    <div class="user-list" id="adminUserList">
+                        <div class="loading">Loading users...</div>
+                    </div>
+                </div>
+
+                <!-- Messages Tab -->
+                <div class="tab-content" id="admin-messages">
+                    <h3>Message Moderation</h3>
+                    <div class="moderation-controls">
+                        <button class="danger-btn" id="clearAllMessages">Clear All Messages</button>
+                        <button class="warning-btn" id="clearTodayMessages">Clear Today's Messages</button>
+                    </div>
+                    <div class="message-list" id="adminMessageList">
+                        <div class="loading">Loading messages...</div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-content" id="admin-settings">
+                    <h3>Site Settings</h3>
+                    <div class="setting-group">
+                        <label>Override Today's Quote:</label>
+                        <select id="quoteOverride">
+                            <option value="">Use automatic daily quote</option>
+                        </select>
+                        <button class="apply-btn" id="applyQuoteOverride">Apply</button>
+                    </div>
+                    <div class="setting-group">
+                        <label>Site Message:</label>
+                        <input type="text" id="siteMessage" placeholder="Optional announcement message">
+                        <button class="apply-btn" id="applySiteMessage">Set Message</button>
+                    </div>
+                </div>
+
+                <!-- Stats Tab -->
+                <div class="tab-content" id="admin-stats">
+                    <h3>Site Statistics</h3>
+                    <div class="stats-grid" id="adminStats">
+                        <div class="loading">Loading stats...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="philosophical-quotes.js"></script>
     <script src="script.js"></script>
 </body>

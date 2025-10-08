@@ -7,6 +7,7 @@ class PhilosophicalDebateApp {
         this.currentDayOfYear = this.getDayOfYear(this.currentDate);
         this.currentUser = null;
         this.selectedAvatar = '🤔';
+        this.adminUsers = ['admin', 'shergold', 'david']; // Admin usernames
         this.init();
     }
 
@@ -18,7 +19,9 @@ class PhilosophicalDebateApp {
         this.setupCharacterCounter();
         this.setupMidnightReset();
         this.setupAuthentication();
+        this.setupAdminSystem();
         this.checkLoginStatus();
+        this.checkSiteMessage();
     }
 
     displayCurrentDate() {
@@ -33,8 +36,17 @@ class PhilosophicalDebateApp {
         const today = new Date();
         const dayOfYear = this.getDayOfYear(today);
         
-        // Use day of year as seed for consistent daily selection
-        const quoteIndex = dayOfYear % philosophicalQuotes.length;
+        // Check for admin quote override
+        const overrideIndex = localStorage.getItem('quoteOverride');
+        let quoteIndex;
+        
+        if (overrideIndex !== null && overrideIndex !== '') {
+            quoteIndex = parseInt(overrideIndex);
+        } else {
+            // Use day of year as seed for consistent daily selection
+            quoteIndex = dayOfYear % philosophicalQuotes.length;
+        }
+        
         const todaysQuote = philosophicalQuotes[quoteIndex];
 
         // Display the quote with animation
@@ -214,6 +226,12 @@ class PhilosophicalDebateApp {
         // Check if user is logged in
         if (!this.currentUser) {
             this.showNotification('Please log in to join the discussion', 'error');
+            return;
+        }
+
+        // Check if user is banned
+        if (this.currentUser.banned) {
+            this.showNotification('You have been banned from posting messages', 'error');
             return;
         }
 
@@ -585,11 +603,19 @@ class PhilosophicalDebateApp {
         authButtons.style.display = 'none';
         
         userAvatar.textContent = this.currentUser.avatar;
-        displayUsername.textContent = this.currentUser.username;
+        
+        // Show admin badge if user is admin
+        const adminBadge = this.isAdmin() ? ' 🛡️' : '';
+        displayUsername.textContent = this.currentUser.username + adminBadge;
 
-        // Enable chat input
-        chatInput.placeholder = `Share your thoughts, ${this.currentUser.username}...`;
-        chatInput.disabled = false;
+        // Enable chat input (unless banned)
+        if (this.currentUser.banned) {
+            chatInput.placeholder = 'You have been banned from posting';
+            chatInput.disabled = true;
+        } else {
+            chatInput.placeholder = `Share your thoughts, ${this.currentUser.username}...`;
+            chatInput.disabled = false;
+        }
     }
 
     logout() {
@@ -648,11 +674,403 @@ class PhilosophicalDebateApp {
             }
         }, 3000);
     }
+
+    // Admin System
+    setupAdminSystem() {
+        // Add secret key combination to open admin dashboard (Ctrl+Shift+A)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                if (this.isAdmin()) {
+                    this.openAdminDashboard();
+                } else {
+                    this.showNotification('Access denied: Admin privileges required', 'error');
+                }
+            }
+        });
+
+        // Admin dashboard controls
+        document.getElementById('closeAdmin').addEventListener('click', () => {
+            this.closeAdminDashboard();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchAdminTab(e.target.dataset.tab);
+            });
+        });
+
+        // Admin actions
+        document.getElementById('clearAllMessages').addEventListener('click', () => {
+            this.clearAllMessages();
+        });
+
+        document.getElementById('clearTodayMessages').addEventListener('click', () => {
+            this.clearTodayMessages();
+        });
+
+        document.getElementById('applyQuoteOverride').addEventListener('click', () => {
+            this.applyQuoteOverride();
+        });
+
+        document.getElementById('applySiteMessage').addEventListener('click', () => {
+            this.applySiteMessage();
+        });
+    }
+
+    isAdmin() {
+        return this.currentUser && this.adminUsers.includes(this.currentUser.username.toLowerCase());
+    }
+
+    openAdminDashboard() {
+        document.getElementById('adminDashboard').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        this.loadAdminData();
+    }
+
+    closeAdminDashboard() {
+        document.getElementById('adminDashboard').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    switchAdminTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`admin-${tabName}`).classList.add('active');
+
+        // Load specific tab data
+        this.loadAdminTabData(tabName);
+    }
+
+    loadAdminData() {
+        this.loadAdminTabData('users');
+        this.populateQuoteOverride();
+    }
+
+    loadAdminTabData(tabName) {
+        switch(tabName) {
+            case 'users':
+                this.loadUserManagement();
+                break;
+            case 'messages':
+                this.loadMessageModeration();
+                break;
+            case 'stats':
+                this.loadSiteStats();
+                break;
+        }
+    }
+
+    loadUserManagement() {
+        const userList = document.getElementById('adminUserList');
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        
+        if (Object.keys(users).length === 0) {
+            userList.innerHTML = '<div class="loading">No users registered yet</div>';
+            return;
+        }
+
+        let html = '';
+        Object.entries(users).forEach(([key, user]) => {
+            const isAdmin = this.adminUsers.includes(user.username.toLowerCase());
+            const joinDate = new Date(user.joinDate).toLocaleDateString();
+            
+            html += `
+                <div class="user-item">
+                    <div class="user-info-admin">
+                        <div class="user-avatar-admin">${user.avatar}</div>
+                        <div class="user-details">
+                            <div class="username-admin">
+                                ${user.username}
+                                ${isAdmin ? '<span class="admin-user-badge">ADMIN</span>' : ''}
+                            </div>
+                            <div class="user-meta">
+                                Joined: ${joinDate} | Messages: ${user.messageCount || 0}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-actions">
+                        ${!isAdmin ? `<button class="ban-btn" onclick="app.banUser('${key}')">Ban</button>` : ''}
+                        <button class="delete-btn" onclick="app.deleteUser('${key}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        userList.innerHTML = html;
+    }
+
+    loadMessageModeration() {
+        const messageList = document.getElementById('adminMessageList');
+        const today = new Date().toDateString();
+        const messagesKey = `philosophical_debate_${today}`;
+        const messages = JSON.parse(localStorage.getItem(messagesKey) || '[]');
+        
+        if (messages.length === 0) {
+            messageList.innerHTML = '<div class="loading">No messages today</div>';
+            return;
+        }
+
+        let html = '';
+        messages.forEach((message, index) => {
+            const time = new Date(message.timestamp).toLocaleTimeString();
+            html += `
+                <div class="message-item">
+                    <div>
+                        <strong>${message.avatar} ${message.author}</strong> <small>${time}</small>
+                        <div class="message-preview">${this.escapeHtml(message.content)}</div>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="delete-btn" onclick="app.deleteMessage(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        messageList.innerHTML = html;
+    }
+
+    loadSiteStats() {
+        const statsContainer = document.getElementById('adminStats');
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        const today = new Date().toDateString();
+        const messagesKey = `philosophical_debate_${today}`;
+        const todayMessages = JSON.parse(localStorage.getItem(messagesKey) || '[]');
+        
+        // Calculate total messages across all days
+        let totalMessages = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('philosophical_debate_')) {
+                const messages = JSON.parse(localStorage.getItem(key) || '[]');
+                totalMessages += messages.length;
+            }
+        }
+
+        const userCount = Object.keys(users).length;
+        const adminCount = Object.values(users).filter(user => 
+            this.adminUsers.includes(user.username.toLowerCase())
+        ).length;
+        
+        statsContainer.innerHTML = `
+            <div class="stat-card">
+                <span class="stat-number">${userCount}</span>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${adminCount}</span>
+                <div class="stat-label">Admins</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${todayMessages.length}</span>
+                <div class="stat-label">Today's Messages</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${totalMessages}</span>
+                <div class="stat-label">Total Messages</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${philosophicalQuotes.length}</span>
+                <div class="stat-label">Available Quotes</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${this.getDayOfYear(new Date())}</span>
+                <div class="stat-label">Day of Year</div>
+            </div>
+        `;
+    }
+
+    populateQuoteOverride() {
+        const select = document.getElementById('quoteOverride');
+        let html = '<option value="">Use automatic daily quote</option>';
+        
+        philosophicalQuotes.forEach((quote, index) => {
+            const preview = quote.quote.length > 50 ? 
+                quote.quote.substring(0, 50) + '...' : quote.quote;
+            html += `<option value="${index}">${quote.author}: ${preview}</option>`;
+        });
+        
+        select.innerHTML = html;
+    }
+
+    // Admin Actions
+    banUser(userKey) {
+        if (confirm('Ban this user? They will no longer be able to post messages.')) {
+            const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+            if (users[userKey]) {
+                users[userKey].banned = true;
+                localStorage.setItem('philosophicalUsers', JSON.stringify(users));
+                this.loadUserManagement();
+                this.showNotification('User banned successfully', 'success');
+            }
+        }
+    }
+
+    deleteUser(userKey) {
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        const username = users[userKey]?.username;
+        
+        if (confirm(`Permanently delete user "${username}"? This cannot be undone.`)) {
+            delete users[userKey];
+            localStorage.setItem('philosophicalUsers', JSON.stringify(users));
+            this.loadUserManagement();
+            this.showNotification('User deleted successfully', 'success');
+        }
+    }
+
+    deleteMessage(messageIndex) {
+        if (confirm('Delete this message?')) {
+            const today = new Date().toDateString();
+            const messagesKey = `philosophical_debate_${today}`;
+            const messages = JSON.parse(localStorage.getItem(messagesKey) || '[]');
+            
+            messages.splice(messageIndex, 1);
+            localStorage.setItem(messagesKey, JSON.stringify(messages));
+            
+            // Refresh chat display
+            this.chatMessages = messages;
+            this.displayAllMessages();
+            
+            // Refresh admin view
+            this.loadMessageModeration();
+            this.showNotification('Message deleted successfully', 'success');
+        }
+    }
+
+    clearAllMessages() {
+        if (confirm('Clear ALL messages from ALL days? This cannot be undone!')) {
+            // Remove all message keys from localStorage
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('philosophical_debate_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            // Clear current chat
+            this.chatMessages = [];
+            this.displayAllMessages();
+            
+            this.loadMessageModeration();
+            this.showNotification('All messages cleared', 'success');
+        }
+    }
+
+    clearTodayMessages() {
+        if (confirm('Clear all messages from today?')) {
+            const today = new Date().toDateString();
+            const messagesKey = `philosophical_debate_${today}`;
+            localStorage.removeItem(messagesKey);
+            
+            // Clear current chat
+            this.chatMessages = [];
+            this.displayAllMessages();
+            
+            this.loadMessageModeration();
+            this.showNotification('Today\'s messages cleared', 'success');
+        }
+    }
+
+    displayAllMessages() {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = `
+            <div class="intro-message">
+                <div class="avatar">🤔</div>
+                <div class="message-content">
+                    <p>Jump into today's philosophical rabbit hole! What's your take on this idea?</p>
+                </div>
+            </div>
+        `;
+        
+        this.chatMessages.forEach(message => {
+            this.displayMessage(message, message.userId === this.currentUser?.username.toLowerCase());
+        });
+    }
+
+    applyQuoteOverride() {
+        const select = document.getElementById('quoteOverride');
+        const quoteIndex = select.value;
+        
+        if (quoteIndex === '') {
+            localStorage.removeItem('quoteOverride');
+            this.showNotification('Quote override removed - using automatic daily quote', 'info');
+        } else {
+            localStorage.setItem('quoteOverride', quoteIndex);
+            this.showNotification('Quote override applied', 'success');
+        }
+        
+        // Refresh the quote display
+        this.displayDailyQuote();
+    }
+
+    applySiteMessage() {
+        const message = document.getElementById('siteMessage').value.trim();
+        
+        if (message) {
+            localStorage.setItem('siteMessage', message);
+            this.showSiteMessage(message);
+            this.showNotification('Site message set', 'success');
+        } else {
+            localStorage.removeItem('siteMessage');
+            this.hideSiteMessage();
+            this.showNotification('Site message removed', 'info');
+        }
+    }
+
+    showSiteMessage(message) {
+        let messageEl = document.getElementById('siteMessage');
+        if (!messageEl) {
+            messageEl = document.createElement('div');
+            messageEl.id = 'siteMessageDisplay';
+            messageEl.style.cssText = `
+                background: #4299e1;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                font-weight: bold;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 999;
+            `;
+            document.body.insertBefore(messageEl, document.body.firstChild);
+        }
+        messageEl.textContent = `📢 ${message}`;
+    }
+
+    hideSiteMessage() {
+        const messageEl = document.getElementById('siteMessageDisplay');
+        if (messageEl) {
+            messageEl.remove();
+        }
+    }
+
+    checkSiteMessage() {
+        const siteMessage = localStorage.getItem('siteMessage');
+        if (siteMessage) {
+            this.showSiteMessage(siteMessage);
+        }
+    }
 }
+
+// Make app globally accessible for admin functions
+let app;
 
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new PhilosophicalDebateApp();
+    app = new PhilosophicalDebateApp();
     
     // Add demo messages after a short delay on first visit today
     setTimeout(() => {
