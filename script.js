@@ -8,11 +8,10 @@ class PhilosophicalDebateApp {
         this.currentUser = null;
         this.selectedAvatar = '🤔';
         
-        // Hardcoded admin accounts - cannot be registered by regular users
-        this.adminAccounts = {
-            'admin': { username: 'admin', password: 'philosopher123' },
-            'shergold': { username: 'shergold', password: 'wisdom2025' },
-            'david': { username: 'david', password: 'thinker456' }
+        // Single admin account - only the site owner
+        this.adminAccount = {
+            username: 'admin',
+            password: 'Solamnic2002'
         };
         
         this.init();
@@ -519,12 +518,11 @@ class PhilosophicalDebateApp {
 
         const userKey = username.toLowerCase();
         
-        // First check if it's an admin account
-        const adminAccount = this.adminAccounts[userKey];
-        if (adminAccount && adminAccount.password === password) {
+        // First check if it's the admin account
+        if (this.adminAccount.username === username && this.adminAccount.password === password) {
             this.currentUser = {
-                username: adminAccount.username,
-                password: adminAccount.password,
+                username: this.adminAccount.username,
+                password: this.adminAccount.password,
                 avatar: '🛡️',
                 joinDate: new Date().toISOString(),
                 messageCount: 0,
@@ -572,8 +570,8 @@ class PhilosophicalDebateApp {
 
         const userKey = username.toLowerCase();
         
-        // Block registration with admin usernames
-        if (this.adminAccounts[userKey]) {
+        // Block registration with the admin username
+        if (username === this.adminAccount.username) {
             this.showNotification('This username is reserved. Please choose another.', 'error');
             return;
         }
@@ -782,15 +780,11 @@ class PhilosophicalDebateApp {
     }
 
     isAdmin() {
-        // Check if current user is one of the hardcoded admin accounts
+        // Check if current user is the single admin account
         if (!this.currentUser) return false;
         
-        const username = this.currentUser.username.toLowerCase();
-        const adminAccount = this.adminAccounts[username];
-        
-        return adminAccount && 
-               this.currentUser.username === adminAccount.username && 
-               this.currentUser.password === adminAccount.password;
+        return this.currentUser.username === this.adminAccount.username && 
+               this.currentUser.password === this.adminAccount.password;
     }
 
     openAdminDashboard() {
