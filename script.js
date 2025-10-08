@@ -677,15 +677,12 @@ class PhilosophicalDebateApp {
 
     // Admin System
     setupAdminSystem() {
-        // Add secret key combination to open admin dashboard (Ctrl+Shift+A)
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-                if (this.isAdmin()) {
-                    this.openAdminDashboard();
-                } else {
-                    this.showNotification('Access denied: Admin privileges required', 'error');
-                }
-            }
+        // Check if URL contains /admin (simulate routing)
+        this.checkAdminRoute();
+        
+        // Handle URL changes (back/forward buttons)
+        window.addEventListener('popstate', () => {
+            this.checkAdminRoute();
         });
 
         // Admin dashboard controls
@@ -718,6 +715,39 @@ class PhilosophicalDebateApp {
         });
     }
 
+    checkAdminRoute() {
+        const url = window.location.href;
+        const isAdminRoute = url.includes('#admin') || url.includes('/admin') || url.endsWith('admin');
+        
+        if (isAdminRoute) {
+            this.handleAdminAccess();
+        } else {
+            this.closeAdminDashboard();
+        }
+    }
+
+    handleAdminAccess() {
+        if (!this.currentUser) {
+            this.showNotification('Please log in to access admin panel', 'error');
+            this.redirectToHome();
+            return;
+        }
+
+        if (!this.isAdmin()) {
+            this.showNotification('Access denied: Admin privileges required', 'error');
+            this.redirectToHome();
+            return;
+        }
+
+        this.openAdminDashboard();
+    }
+
+    redirectToHome() {
+        // Remove admin from URL
+        const cleanUrl = window.location.href.replace(/#admin.*$/, '').replace(/\/admin.*$/, '');
+        window.history.replaceState({}, '', cleanUrl);
+    }
+
     isAdmin() {
         return this.currentUser && this.adminUsers.includes(this.currentUser.username.toLowerCase());
     }
@@ -731,6 +761,9 @@ class PhilosophicalDebateApp {
     closeAdminDashboard() {
         document.getElementById('adminDashboard').style.display = 'none';
         document.body.style.overflow = 'auto';
+        
+        // Update URL to remove admin route
+        this.redirectToHome();
     }
 
     switchAdminTab(tabName) {
