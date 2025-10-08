@@ -7,7 +7,14 @@ class PhilosophicalDebateApp {
         this.currentDayOfYear = this.getDayOfYear(this.currentDate);
         this.currentUser = null;
         this.selectedAvatar = '🤔';
-        this.adminUsers = ['admin', 'shergold', 'david']; // Admin usernames
+        
+        // Hardcoded admin accounts - cannot be registered by regular users
+        this.adminAccounts = {
+            'admin': { username: 'admin', password: 'philosopher123' },
+            'shergold': { username: 'shergold', password: 'wisdom2025' },
+            'david': { username: 'david', password: 'thinker456' }
+        };
+        
         this.init();
     }
 
@@ -510,11 +517,30 @@ class PhilosophicalDebateApp {
             return;
         }
 
-        // Get stored users
-        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
-        
-        // Check if user exists and password matches
         const userKey = username.toLowerCase();
+        
+        // First check if it's an admin account
+        const adminAccount = this.adminAccounts[userKey];
+        if (adminAccount && adminAccount.password === password) {
+            this.currentUser = {
+                username: adminAccount.username,
+                password: adminAccount.password,
+                avatar: '🛡️',
+                joinDate: new Date().toISOString(),
+                messageCount: 0,
+                email: ''
+            };
+            this.updateUIForLoggedInUser();
+            this.hideModal('loginModal');
+            this.showNotification(`Welcome back, Admin ${this.currentUser.username}! 🛡️`, 'success');
+            
+            // Store current session
+            localStorage.setItem('currentPhilosophicalUser', JSON.stringify(this.currentUser));
+            return;
+        }
+        
+        // Then check regular users
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
         if (users[userKey] && users[userKey].password === password) {
             this.currentUser = users[userKey];
             this.updateUIForLoggedInUser();
@@ -544,9 +570,16 @@ class PhilosophicalDebateApp {
             return;
         }
 
+        const userKey = username.toLowerCase();
+        
+        // Block registration with admin usernames
+        if (this.adminAccounts[userKey]) {
+            this.showNotification('This username is reserved. Please choose another.', 'error');
+            return;
+        }
+
         // Get stored users
         const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
-        const userKey = username.toLowerCase();
 
         // Check if username already exists
         if (users[userKey]) {
@@ -749,7 +782,15 @@ class PhilosophicalDebateApp {
     }
 
     isAdmin() {
-        return this.currentUser && this.adminUsers.includes(this.currentUser.username.toLowerCase());
+        // Check if current user is one of the hardcoded admin accounts
+        if (!this.currentUser) return false;
+        
+        const username = this.currentUser.username.toLowerCase();
+        const adminAccount = this.adminAccounts[username];
+        
+        return adminAccount && 
+               this.currentUser.username === adminAccount.username && 
+               this.currentUser.password === adminAccount.password;
     }
 
     openAdminDashboard() {
