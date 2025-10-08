@@ -407,33 +407,7 @@ class PhilosophicalDebateApp {
         }
     }
 
-    // Add some demo messages on first visit
-    addDemoMessages() {
-        if (this.chatMessages.length === 0) {
-            const demoMessages = [
-                {
-                    id: 1,
-                    author: 'deep_thinker42',
-                    content: 'wow this really hits different... makes me question everything I thought I knew about living authentically',
-                    timestamp: new Date(Date.now() - 420000) // 7 minutes ago
-                },
-                {
-                    id: 2,
-                    author: 'question_everything',
-                    content: 'but how do we even know what counts as "examining" our lives? are we just examining our thoughts about our lives?? 🤯',
-                    timestamp: new Date(Date.now() - 180000) // 3 minutes ago
-                }
-            ];
 
-            demoMessages.forEach(message => {
-                this.chatMessages.push(message);
-                this.displayMessage(message);
-            });
-
-            this.storeMessages();
-            this.scrollToBottom();
-        }
-    }
 
     // Authentication System
     setupAuthentication() {
@@ -1140,10 +1114,7 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new PhilosophicalDebateApp();
     
-    // Add demo messages after a short delay on first visit today
-    setTimeout(() => {
-        app.addDemoMessages();
-    }, 2000);
+
 });
 
 // Add some interactive features
