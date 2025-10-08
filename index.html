@@ -14,6 +14,17 @@
             <h1>The Thinking Corner</h1>
             <p class="header-text">Where ideas collide and minds wander</p>
             <div class="date-badge" id="dateDisplay"></div>
+            <div class="user-controls">
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span class="user-avatar" id="userAvatar">🤔</span>
+                    <span class="username" id="displayUsername"></span>
+                    <button class="logout-btn" id="logoutBtn">exit</button>
+                </div>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="login-btn" id="loginBtn">enter</button>
+                    <button class="signup-btn" id="signupBtn">join</button>
+                </div>
+            </div>
         </div>
 
         <div class="content-area">
@@ -66,6 +77,71 @@
             <div class="footer-doodle">∿∿∿</div>
             <p>Made with curiosity by Shergold Industries</p>
             <div class="year-badge">2025</div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal" style="display: none;">
+        <div class="modal-paper">
+            <div class="modal-header">
+                <h3>Enter the discussion</h3>
+                <button class="close-btn" id="closeLogin">×</button>
+            </div>
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label>Username or Email:</label>
+                    <input type="text" id="loginInput" placeholder="your_thinking_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="loginPassword" placeholder="your secret thoughts" required>
+                </div>
+                <button type="submit" class="submit-btn">Let me in</button>
+                <p class="form-footer">
+                    New to deep thinking? <a href="#" id="switchToSignup">Join the conversation</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="signupModal" style="display: none;">
+        <div class="modal-paper">
+            <div class="modal-header">
+                <h3>Join the thinkers</h3>
+                <button class="close-btn" id="closeSignup">×</button>
+            </div>
+            <form class="auth-form" id="signupForm">
+                <div class="form-group">
+                    <label>Choose a username:</label>
+                    <input type="text" id="signupUsername" placeholder="deep_thinker_42" required>
+                </div>
+                <div class="form-group">
+                    <label>Email (optional):</label>
+                    <input type="email" id="signupEmail" placeholder="your@thoughts.com">
+                </div>
+                <div class="form-group">
+                    <label>Create password:</label>
+                    <input type="password" id="signupPassword" placeholder="make it thoughtful" required>
+                </div>
+                <div class="form-group">
+                    <label>Pick your avatar:</label>
+                    <div class="avatar-picker" id="avatarPicker">
+                        <span class="avatar-option selected" data-emoji="🤔">🤔</span>
+                        <span class="avatar-option" data-emoji="🧠">🧠</span>
+                        <span class="avatar-option" data-emoji="💭">💭</span>
+                        <span class="avatar-option" data-emoji="🤓">🤓</span>
+                        <span class="avatar-option" data-emoji="🎭">🎭</span>
+                        <span class="avatar-option" data-emoji="📚">📚</span>
+                        <span class="avatar-option" data-emoji="✨">✨</span>
+                        <span class="avatar-option" data-emoji="🦉">🦉</span>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Start thinking</button>
+                <p class="form-footer">
+                    Already pondering? <a href="#" id="switchToLogin">Enter here</a>
+                </p>
+            </form>
         </div>
     </div>
 

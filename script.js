@@ -5,6 +5,8 @@ class PhilosophicalDebateApp {
         this.chatMessages = [];
         this.currentDate = new Date();
         this.currentDayOfYear = this.getDayOfYear(this.currentDate);
+        this.currentUser = null;
+        this.selectedAvatar = '🤔';
         this.init();
     }
 
@@ -15,6 +17,8 @@ class PhilosophicalDebateApp {
         this.loadStoredMessages();
         this.setupCharacterCounter();
         this.setupMidnightReset();
+        this.setupAuthentication();
+        this.checkLoginStatus();
     }
 
     displayCurrentDate() {
@@ -207,23 +211,38 @@ class PhilosophicalDebateApp {
         const chatInput = document.getElementById('chatInput');
         const messageText = chatInput.value.trim();
 
+        // Check if user is logged in
+        if (!this.currentUser) {
+            this.showNotification('Please log in to join the discussion', 'error');
+            return;
+        }
+
         if (messageText === '') {
             return;
         }
 
-        // Create message object
+        // Create message object with real user data
         const message = {
             id: Date.now(),
-            author: this.getRandomName(),
+            author: this.currentUser.username,
+            avatar: this.currentUser.avatar,
             content: messageText,
-            timestamp: new Date()
+            timestamp: new Date(),
+            userId: this.currentUser.username.toLowerCase()
         };
 
         // Add to messages array
         this.chatMessages.push(message);
 
         // Display the message
-        this.displayMessage(message);
+        this.displayMessage(message, true); // true indicates it's from current user
+
+        // Update user's message count
+        this.currentUser.messageCount++;
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        users[this.currentUser.username.toLowerCase()] = this.currentUser;
+        localStorage.setItem('philosophicalUsers', JSON.stringify(users));
+        localStorage.setItem('currentPhilosophicalUser', JSON.stringify(this.currentUser));
 
         // Clear input
         chatInput.value = '';
@@ -233,16 +252,23 @@ class PhilosophicalDebateApp {
 
         // Scroll to bottom
         this.scrollToBottom();
+
+        // Update character counter
+        const charCount = document.getElementById('charCount');
+        if (charCount) charCount.textContent = '0/500';
     }
 
     // Display a message in the chat
-    displayMessage(message) {
+    displayMessage(message, isOwnMessage = false) {
         const chatMessages = document.getElementById('chatMessages');
         
         const messageElement = document.createElement('div');
-        messageElement.className = 'message';
+        messageElement.className = `message${isOwnMessage ? ' own' : ''}`;
+        
+        const avatar = message.avatar || this.getRandomEmoji();
+        
         messageElement.innerHTML = `
-            <div class="avatar">${this.getRandomEmoji()}</div>
+            <div class="avatar">${avatar}</div>
             <div class="message-bubble">
                 <div class="message-author">${message.author}</div>
                 <div class="message-content">${this.escapeHtml(message.content)}</div>
@@ -251,6 +277,9 @@ class PhilosophicalDebateApp {
         `;
 
         chatMessages.appendChild(messageElement);
+        
+        // Add slide-in animation
+        messageElement.style.animation = 'slideIn 0.3s ease-out';
     }
 
     // Get random emoji for avatar
@@ -380,6 +409,244 @@ class PhilosophicalDebateApp {
             this.storeMessages();
             this.scrollToBottom();
         }
+    }
+
+    // Authentication System
+    setupAuthentication() {
+        // Modal controls
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const closeLogin = document.getElementById('closeLogin');
+        const closeSignup = document.getElementById('closeSignup');
+        
+        // Modal switching
+        const switchToSignup = document.getElementById('switchToSignup');
+        const switchToLogin = document.getElementById('switchToLogin');
+        
+        // Forms
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        // Avatar picker
+        const avatarOptions = document.querySelectorAll('.avatar-option');
+
+        // Event listeners
+        loginBtn.addEventListener('click', () => this.showModal('loginModal'));
+        signupBtn.addEventListener('click', () => this.showModal('signupModal'));
+        logoutBtn.addEventListener('click', () => this.logout());
+        
+        closeLogin.addEventListener('click', () => this.hideModal('loginModal'));
+        closeSignup.addEventListener('click', () => this.hideModal('signupModal'));
+        
+        switchToSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.hideModal('loginModal');
+            this.showModal('signupModal');
+        });
+        
+        switchToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.hideModal('signupModal');
+            this.showModal('loginModal');
+        });
+
+        // Form submissions
+        loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+        signupForm.addEventListener('submit', (e) => this.handleSignup(e));
+
+        // Avatar selection
+        avatarOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.selectedAvatar = option.dataset.emoji;
+            });
+        });
+
+        // Close modals on outside click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                this.hideModal(e.target.id);
+            }
+        });
+    }
+
+    showModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    hideModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginInput').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!username || !password) {
+            this.showNotification('Please fill in all fields', 'error');
+            return;
+        }
+
+        // Get stored users
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        
+        // Check if user exists and password matches
+        const userKey = username.toLowerCase();
+        if (users[userKey] && users[userKey].password === password) {
+            this.currentUser = users[userKey];
+            this.updateUIForLoggedInUser();
+            this.hideModal('loginModal');
+            this.showNotification(`Welcome back, ${this.currentUser.username}! 🎉`, 'success');
+            
+            // Store current session
+            localStorage.setItem('currentPhilosophicalUser', JSON.stringify(this.currentUser));
+        } else {
+            this.showNotification('Invalid username or password', 'error');
+        }
+    }
+
+    handleSignup(e) {
+        e.preventDefault();
+        const username = document.getElementById('signupUsername').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+
+        if (!username || !password) {
+            this.showNotification('Username and password are required', 'error');
+            return;
+        }
+
+        if (username.length < 3) {
+            this.showNotification('Username must be at least 3 characters', 'error');
+            return;
+        }
+
+        // Get stored users
+        const users = JSON.parse(localStorage.getItem('philosophicalUsers') || '{}');
+        const userKey = username.toLowerCase();
+
+        // Check if username already exists
+        if (users[userKey]) {
+            this.showNotification('Username already taken. Try another!', 'error');
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            username: username,
+            email: email,
+            password: password,
+            avatar: this.selectedAvatar,
+            joinDate: new Date().toISOString(),
+            messageCount: 0
+        };
+
+        // Store user
+        users[userKey] = newUser;
+        localStorage.setItem('philosophicalUsers', JSON.stringify(users));
+
+        // Log them in
+        this.currentUser = newUser;
+        this.updateUIForLoggedInUser();
+        this.hideModal('signupModal');
+        this.showNotification(`Welcome to The Thinking Corner, ${username}! 🌟`, 'success');
+        
+        // Store current session
+        localStorage.setItem('currentPhilosophicalUser', JSON.stringify(this.currentUser));
+    }
+
+    checkLoginStatus() {
+        const storedUser = localStorage.getItem('currentPhilosophicalUser');
+        const chatInput = document.getElementById('chatInput');
+        
+        if (storedUser) {
+            this.currentUser = JSON.parse(storedUser);
+            this.updateUIForLoggedInUser();
+        } else {
+            // Disable chat for non-logged-in users
+            chatInput.placeholder = 'Login to join the discussion...';
+            chatInput.disabled = true;
+        }
+    }
+
+    updateUIForLoggedInUser() {
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userAvatar = document.getElementById('userAvatar');
+        const displayUsername = document.getElementById('displayUsername');
+        const chatInput = document.getElementById('chatInput');
+
+        userInfo.style.display = 'flex';
+        authButtons.style.display = 'none';
+        
+        userAvatar.textContent = this.currentUser.avatar;
+        displayUsername.textContent = this.currentUser.username;
+
+        // Enable chat input
+        chatInput.placeholder = `Share your thoughts, ${this.currentUser.username}...`;
+        chatInput.disabled = false;
+    }
+
+    logout() {
+        this.currentUser = null;
+        localStorage.removeItem('currentPhilosophicalUser');
+        
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const chatInput = document.getElementById('chatInput');
+        
+        userInfo.style.display = 'none';
+        authButtons.style.display = 'flex';
+
+        // Disable chat input
+        chatInput.placeholder = 'Login to join the discussion...';
+        chatInput.disabled = true;
+
+        this.showNotification('Logged out. Thanks for thinking with us! 👋', 'info');
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        const colors = {
+            success: '#38a169',
+            error: '#e53e3e',
+            info: '#4299e1'
+        };
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-family: 'Arial', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 3000);
     }
 }
 
