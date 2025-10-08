@@ -76,6 +76,23 @@ body {
     font-weight: bold;
 }
 
+.site-description {
+    text-align: center;
+    margin: 20px 0;
+    padding: 0 20px;
+}
+
+.site-description p {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-style: italic;
+    opacity: 0.8;
+    margin: 0;
+    font-family: 'Georgia', serif;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
 .content-area {
     display: flex;
     flex-direction: column;
