@@ -114,8 +114,6 @@ class PhilosophicalDebateApp {
             
             // If the day has changed, refresh everything
             if (currentDayOfYear !== this.currentDayOfYear) {
-                console.log('New day detected! Refreshing quote and clearing old messages...');
-                
                 // Update stored day
                 this.currentDayOfYear = currentDayOfYear;
                 this.currentDate = now;
@@ -334,16 +332,6 @@ class PhilosophicalDebateApp {
     getRandomEmoji() {
         const emojis = ['🤔', '🧠', '💭', '🤓', '🎭', '📚', '✨', '🔍', '💡', '🎨', '🌟', '🦉'];
         return emojis[Math.floor(Math.random() * emojis.length)];
-    }
-
-    // Generate a random name for demonstration (in real app, users would log in)
-    getRandomName() {
-        const names = [
-            'wondering_soul', 'deep_thinker42', 'question_everything', 'socrates_fan',
-            'mind_wanderer', 'curious_cat', 'philosophy_nerd', 'seeker_of_truth',
-            'random_thoughts', 'brain_storms', 'wise_owl', 'thinking_cap'
-        ];
-        return names[Math.floor(Math.random() * names.length)];
     }
 
     // Setup character counter
