@@ -18,6 +18,7 @@ class PhilosophicalDebateApp {
     }
 
     init() {
+        this.cleanupDemoData();
         this.displayCurrentDate();
         this.displayDailyQuote();
         this.setupChatFunctionality();
@@ -28,6 +29,29 @@ class PhilosophicalDebateApp {
         this.setupAdminSystem();
         this.checkLoginStatus();
         this.checkSiteMessage();
+    }
+
+    cleanupDemoData() {
+        // Clean up old demo messages from localStorage
+        const today = new Date().toDateString();
+        const messagesKey = `philosophical_debate_${today}`;
+        const messages = JSON.parse(localStorage.getItem(messagesKey) || '[]');
+        
+        // Remove demo messages (messages with specific demo usernames)
+        const demoUsernames = ['deep_thinker42', 'question_everything'];
+        const cleanMessages = messages.filter(msg => !demoUsernames.includes(msg.author));
+        
+        // Update localStorage if we removed any demo messages
+        if (cleanMessages.length !== messages.length) {
+            localStorage.setItem(messagesKey, JSON.stringify(cleanMessages));
+            this.chatMessages = cleanMessages;
+            
+            // Clear the chat display to remove demo messages from view
+            const messagesContainer = document.getElementById('messages');
+            if (messagesContainer) {
+                messagesContainer.innerHTML = '';
+            }
+        }
     }
 
     displayCurrentDate() {
